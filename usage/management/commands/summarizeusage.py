@@ -1,12 +1,14 @@
-from optparse import make_option
-from datetime import timedelta
+from datetime import (timedelta,
+                      datetime)
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.core.urlresolvers import resolve, Resolver404
 
 from usage.models import (
     PageHit,
-    Period)
+    Period,
+    UsageSummary)
 
 
 def _round_to_interval(time, interval):
@@ -33,29 +35,39 @@ class Command(BaseCommand):
 
     help = "Summarize user usage details"
 
-    option_list = BaseCommand.option_list + (
-        make_option('--interval', '-i',
-            action='store',
-            nargs=1,
-            dest='interval',
-            default=5,
-            help='[minutes] Summarize data in intervals of this much time'),
-    )
-
-
     def handle(self, *args, **options):
         """
         Run the Command
         """
-        interval = options['interval']
+        # Interval in minutes to break up hits.
+        # TODO: make this configurable.
+        interval = settings.USAGE_INTERVAL
+        delta = timedelta(minutes=interval)
+        run_time = datetime.now()
 
-        try:
-            last_period = Period.objects.latest('end')
-        except Period.DoesNotExist:
-            # If there are no periods, see when our earliest
-            # page hit is and start prior to that.
-            time = _round_to_interval(PageHit.objects.earliest('requested_time').requested_time, interval)
-            print time
-
-
-
+        pagehits = PageHit.objects.not_summarized().order_by('requested_time')
+        if pagehits.exists():
+            start = _round_to_interval(
+                pagehits.earliest('requested_time').requested_time, interval)
+            period, created = Period.objects.get_or_create(start=start, end=start + delta)
+            for hit in pagehits:
+                if not (hit.requested_time >= start and
+                        hit.requested_time < start + delta):
+                    start = _round_to_interval(hit.requested_time, interval)
+                    period, created = Period.objects.get_or_create(
+                        start=start, end=start + delta)
+                try:
+                    namespace = resolve(hit.requested_page).namespace
+                    url_name = resolve(hit.requested_page).url_name
+                except Resolver404:
+                    namespace = url_name = "Unknown"
+                summary, created = UsageSummary.objects.get_or_create(
+                            time_period=period,
+                            namespace=namespace,
+                            url_name=url_name,
+                            user=hit.user)
+                hit.summarized = run_time
+                hit.save()
+                summary.hits += 1
+                summary.save()
+        print "Processed %s hits" % pagehits.count()
