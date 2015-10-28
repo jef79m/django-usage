@@ -46,3 +46,7 @@ class UsageSummary(models.Model):
     url_name = models.CharField(max_length=255)
     time_period = models.ForeignKey(Period)
 
+    def __unicode__(self):
+        return u"(%s-%s) %s - %s: %s hits" % (
+            self.time_period.start, self.time_period.end,
+            self.namespace, self.url_name, self.hits)

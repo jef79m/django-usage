@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block content_title %}<h1>{{ title }}</h1>{% endblock %}
+
+{% block content %}
+<ul>
+  {% for user in users %}
+    <li>{{user}} {{user.active_periods}}</li>
+      <ul>
+      {% for summary in user.usagesummary_set.all %}
+        <li>{{ summary}} </li>
+      {% endfor %}
+      </ul>
+  {% endfor %}
+</ul>
+
+{% endblock %}
