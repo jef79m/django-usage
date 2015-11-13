@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 from appconf import AppConf
 
 
@@ -9,7 +10,8 @@ from appconf import AppConf
 # eg. USAGE_INTERVAL = 10
 class UsageConf(AppConf):
     INTERVAL = 5  # summary interval in minutes
-
+    EXCLUDE_URLS = [] # Skip URLS containing these strings when summarizing
+    DELETE_AFTER = 14 # Delete hit records after this many days.
 
 class PageHitQuerySet(models.QuerySet):
     def not_summarized(self):
@@ -38,6 +40,10 @@ class Period(models.Model):
     def __unicode__(self):
         return u"%s -> %s" % (self.start, self.end)
 
+    @property
+    def index(self):
+        return ((self.start.hour * 60) + self.start.minute) / settings.USAGE_INTERVAL
+
 
 class UsageSummary(models.Model):
     user = models.ForeignKey(User)
@@ -50,3 +56,5 @@ class UsageSummary(models.Model):
         return u"(%s-%s) %s - %s: %s hits" % (
             self.time_period.start, self.time_period.end,
             self.namespace, self.url_name, self.hits)
+
+

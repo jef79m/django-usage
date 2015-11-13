@@ -1,0 +1,17 @@
+.hide {
+  display: none;
+}
+
+.usage-list h2 {
+  display: inline-block;
+  width: 25%;
+  min-width: 500px;
+}
+
+.usage-list h2 small {
+  color: gray;
+}
+
+.sparkline {
+  text-align: right;
+}

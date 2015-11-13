@@ -39,8 +39,6 @@ class Command(BaseCommand):
         """
         Run the Command
         """
-        # Interval in minutes to break up hits.
-        # TODO: make this configurable.
         interval = settings.USAGE_INTERVAL
         delta = timedelta(minutes=interval)
         run_time = datetime.now()

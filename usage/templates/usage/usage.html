@@ -1,19 +1,51 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
+{% load staticfiles %}
 
 {% block title %}{{ title }}{% endblock %}
 {% block content_title %}<h1>{{ title }}</h1>{% endblock %}
 
+{% block extrastyle %}
+    <link rel='stylesheet' href='{% static "usage/css/usage.css"%}' type='text/css'/>
+{% endblock extrastyle %}
 {% block content %}
-<ul>
-  {% for user in users %}
-    <li>{{user}} {{user.active_periods}}</li>
-      <ul>
-      {% for summary in user.usagesummary_set.all %}
-        <li>{{ summary}} </li>
+{% if previous_day %}
+<a href="{{ request.path }}?date={{previous_day|date:"Ymd"}}">Previous day ({{previous_day}})</a>
+{% endif %}
+{% if next_day %}
+<a href="{{ request.path }}?date={{next_day|date:"Ymd"}}">Next Day ({{next_day}})</a>
+{% endif %}
+<ul class="usage-list">
+  {% for user in usage_data %}
+    <li class="expandable_heading" data-target="{{user.user}}">
+      <h2>{{user.user.username}}
+        <small>active for {{user.time_active}} minutes</small>
+      </h2>
+      <embed class="sparkline" src="{% static "usage/img/sparkline.svg"%}?{{user.spark_data}}" width=200 height=150>
+      {% regroup user.summaries by time_period as periods %}
+      <div id="{{ user.user }}" class="hide">
+      {% for tp in periods %}
+        <ul>
+          <li>{{ tp.grouper }}
+            <ul>
+              {% for summary in tp.list %}
+                <li>[{{ summary.namespace }}] {{ summary.url_name }} <small>({{ summary.hits }} hits)</small></li>
+              {% endfor %}
+            </ul>
+          </li>
+        </ul>
       {% endfor %}
-      </ul>
+      </div>
+    </li>
   {% endfor %}
 </ul>
 
 {% endblock %}
+
+{% block footer %}
+  {{ block.super }}
+  <script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
+  <script type="text/javascript" src="/static/admin/js/jquery.init.js"></script>
+  <script type="text/javascript" charset="utf-8" src={% static "usage/js/usage.js" %} ></script>
+{% endblock footer %}
+
