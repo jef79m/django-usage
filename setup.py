@@ -34,7 +34,7 @@ setup(
     long_description=readme + '\n\n' + history,
     author='Jeff Mears',
     author_email='jeff@fuzzknuckle.com',
-    url='https://github.com/jef79m/django-usage',
+    url='https://github.com/nswrdn/django-usage.git',
     packages=[
         'usage',
     ],

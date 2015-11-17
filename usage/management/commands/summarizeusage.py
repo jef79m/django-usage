@@ -49,6 +49,13 @@ class Command(BaseCommand):
                 pagehits.earliest('requested_time').requested_time, interval)
             period, created = Period.objects.get_or_create(start=start, end=start + delta)
             for hit in pagehits:
+                excluded = False
+                for exclude in settings.USAGE_EXCLUDE_URLS:
+                    if exclude in hit.requested_page:
+                        excluded = True
+                if excluded:
+                    continue
+
                 if not (hit.requested_time >= start and
                         hit.requested_time < start + delta):
                     start = _round_to_interval(hit.requested_time, interval)

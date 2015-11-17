@@ -37,8 +37,10 @@ def usage_display(request):
         summaries = (UsageSummary.objects
                      .filter(
                         user_id=user['pk'], time_period__start__contains=date))
+        # Sparkline data is initialised with zero values
+        # I'm making the assumption that ther will be more
+        # periods with 0 activity than actual activity
         spark_data = [0] * (60 * 24 / settings.USAGE_INTERVAL)
-
         periods = summaries.values('time_period').annotate(hit_total=Count('hits')).values_list('time_period','hit_total')
         for period_id, hits in periods:
             spark_data[Period.objects.get(pk=period_id).index] = hits

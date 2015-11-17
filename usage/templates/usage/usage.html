@@ -8,9 +8,14 @@
 {% block extrastyle %}
     <link rel='stylesheet' href='{% static "usage/css/usage.css"%}' type='text/css'/>
 {% endblock extrastyle %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a> | User Activity Summary</h1>
+{% endblock %}
+
 {% block content %}
 {% if previous_day %}
-<a href="{{ request.path }}?date={{previous_day|date:"Ymd"}}">Previous day ({{previous_day}})</a>
+<a href="{{ request.path }}?date={{previous_day|date:'Ymd'}}">Previous day ({{previous_day}})</a>
 {% endif %}
 {% if next_day %}
 <a href="{{ request.path }}?date={{next_day|date:"Ymd"}}">Next Day ({{next_day}})</a>
@@ -19,9 +24,9 @@
   {% for user in usage_data %}
     <li class="expandable_heading" data-target="{{user.user}}">
       <h2>{{user.user.username}}
-        <small>active for {{user.time_active}} minutes</small>
+        <small>({{user.time_active}} minutes)</small>
       </h2>
-      <embed class="sparkline" src="{% static "usage/img/sparkline.svg"%}?{{user.spark_data}}" width=200 height=150>
+      <embed class="sparkline" src="{% static "usage/img/sparkline.svg"%}?{{user.spark_data}}" width=70% height=20px>
       {% regroup user.summaries by time_period as periods %}
       <div id="{{ user.user }}" class="hide">
       {% for tp in periods %}
@@ -41,7 +46,6 @@
 </ul>
 
 {% endblock %}
-
 {% block footer %}
   {{ block.super }}
   <script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
